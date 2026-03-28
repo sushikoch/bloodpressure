@@ -1,0 +1,96 @@
+cat > /mnt/user-data/outputs/blood-pressure-tracker-project.md << 'EOF'
+# Blood Pressure Tracker — Project Specification
+
+## Overview
+A personal, mobile-friendly web application for logging blood pressure measurements, viewable and usable from an iPhone, with the ability to export all data as CSV for time-series analysis.
+
+---
+
+## Goals
+- **Primary:** Enter and store blood pressure readings (systolic, diastolic, pulse, date/time)
+- **Secondary:** Export all measurements as a CSV file for external analysis
+
+---
+
+## Tech Stack
+
+| Layer      | Technology         |
+|------------|--------------------|
+| Frontend   | React (mobile-first, responsive) |
+| Backend    | Node.js + Express  |
+| Database   | PostgreSQL          |
+| Hosting    | Synology NAS (Docker) |
+| Client     | iPhone (Safari browser) |
+
+---
+
+## Architecture
+
+The iPhone connects over the local network to the Synology NAS, which runs two Docker containers: one for the Node.js/Express API server, one for PostgreSQL.
+
+- React frontend is served as a static build from the Node server
+- Access via `http://<NAS-local-IP>:3000` from iPhone Safari
+- No internet exposure required — local network only
+
+---
+
+## Data Model: `measurements` table
+
+| Column        | Type        | Notes                        |
+|---------------|-------------|------------------------------|
+| `id`          | SERIAL PK   | Auto-increment               |
+| `measured_at` | TIMESTAMPTZ | Date and time of measurement |
+| `systolic`    | INTEGER     | mmHg (upper number)          |
+| `diastolic`   | INTEGER     | mmHg (lower number)          |
+| `pulse`       | INTEGER     | Beats per minute (optional)  |
+| `notes`       | TEXT        | Optional free-text notes     |
+| `created_at`  | TIMESTAMPTZ | Record creation timestamp    |
+
+---
+
+## API Endpoints
+
+| Method | Endpoint              | Description                        |
+|--------|-----------------------|------------------------------------|
+| POST   | `/api/measurements`   | Save a new measurement             |
+| GET    | `/api/measurements`   | Retrieve all measurements (JSON)   |
+| GET    | `/api/export/csv`     | Download all measurements as CSV   |
+
+---
+
+## Frontend Screens
+
+1. **Input Form** — Date/time (default: now), Systolic, Diastolic, Pulse (optional), Notes (optional). Mobile-optimized numeric inputs.
+2. **History List** — Scrollable list, sorted by date descending, showing all past readings.
+3. **Export Button** — Triggers CSV download via `/api/export/csv`.
+
+---
+
+## Synology NAS Deployment
+
+1. Install Docker via Synology Package Center
+2. `docker-compose.yml` with two services: `postgres` + `app`
+3. PostgreSQL data stored in a named Docker volume (persistent)
+4. Expose port `3000` on the NAS
+
+---
+
+## Coding Phase — Sequence
+
+1. `npm init` — initialize Node project
+2. Express server setup with API routes
+3. PostgreSQL connection via `pg` library
+4. Database schema / migration script
+5. React frontend: form + history list + export button
+6. `npm run build` — React production build served via Express
+7. `docker-compose.yml` for NAS
+8. End-to-end test from iPhone on local network
+
+---
+
+## Future Enhancements
+- Authentication for local network privacy
+- Charts showing blood pressure trends over time
+- Date range filtering in history view
+- Measurement reminders/notifications
+EOF
