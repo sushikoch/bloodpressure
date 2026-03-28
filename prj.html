@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BP Tracker — Project Spec</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #1a1a1a; line-height: 1.6; }
+    h1 { color: #c0392b; border-bottom: 2px solid #c0392b; padding-bottom: 8px; }
+    h2 { color: #2c3e50; margin-top: 32px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th { background: #2c3e50; color: white; padding: 8px 12px; text-align: left; }
+    td { padding: 8px 12px; border-bottom: 1px solid #ddd; }
+    tr:nth-child(even) td { background: #f8f8f8; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    pre { background: #f0f0f0; padding: 16px; border-radius: 8px; overflow-x: auto; }
+    .badge { display: inline-block; background: #c0392b; color: white; border-radius: 12px; padding: 2px 10px; font-size: 0.8em; margin-left: 8px; }
+    ol li { margin: 6px 0; }
+    .footer { margin-top: 40px; font-size: 0.8em; color: #999; border-top: 1px solid #eee; padding-top: 12px; }
+  </style>
+</head>
+<body>
+
+<h1>🩺 Blood Pressure Tracker <span class="badge">Project Spec</span></h1>
+<p>A personal, mobile-friendly web application for logging blood pressure measurements from an iPhone, with CSV export for time-series analysis.</p>
+
+<h2>Goals</h2>
+<ul>
+  <li><strong>Primary:</strong> Enter and store blood pressure readings (systolic, diastolic, pulse, date/time)</li>
+  <li><strong>Secondary:</strong> Export all measurements as a CSV file</li>
+</ul>
+
+<h2>Tech Stack</h2>
+<table>
+  <tr><th>Layer</th><th>Technology</th></tr>
+  <tr><td>Frontend</td><td>React (mobile-first, responsive)</td></tr>
+  <tr><td>Backend</td><td>Node.js + Express</td></tr>
+  <tr><td>Database</td><td>PostgreSQL</td></tr>
+  <tr><td>Hosting</td><td>Synology NAS (Docker)</td></tr>
+  <tr><td>Client</td><td>iPhone (Safari browser)</td></tr>
+</table>
+
+<h2>Architecture</h2>
+<pre>iPhone (Safari)
+    ↓ HTTP over local network
+Synology NAS
+    ├── Docker: Node.js + Express  (API + serves React build)
+    └── Docker: PostgreSQL         (persistent data volume)</pre>
+<p>Access via <code>http://&lt;NAS-local-IP&gt;:3000</code> — no internet exposure needed.</p>
+
+<h2>Data Model — <code>measurements</code> table</h2>
+<table>
+  <tr><th>Column</th><th>Type</th><th>Notes</th></tr>
+  <tr><td><code>id</code></td><td>SERIAL PK</td><td>Auto-increment</td></tr>
+  <tr><td><code>measured_at</code></td><td>TIMESTAMPTZ</td><td>When measurement was taken</td></tr>
+  <tr><td><code>systolic</code></td><td>INTEGER</td><td>mmHg — upper number</td></tr>
+  <tr><td><code>diastolic</code></td><td>INTEGER</td><td>mmHg — lower number</td></tr>
+  <tr><td><code>pulse</code></td><td>INTEGER</td><td>BPM — optional</td></tr>
+  <tr><td><code>notes</code></td><td>TEXT</td><td>Optional free text</td></tr>
+  <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td>Record creation time</td></tr>
+</table>
+
+<h2>API Endpoints</h2>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>POST</td><td><code>/api/measurements</code></td><td>Save new reading</td></tr>
+  <tr><td>GET</td><td><code>/api/measurements</code></td><td>Retrieve all readings (JSON)</td></tr>
+  <tr><td>GET</td><td><code>/api/export/csv</code></td><td>Download all data as CSV</td></tr>
+</table>
+
+<h2>Frontend Screens</h2>
+<ol>
+  <li><strong>Input Form</strong> — date/time (default: now), systolic, diastolic, pulse, notes. Mobile-optimized numeric inputs.</li>
+  <li><strong>History List</strong> — scrollable list of all past readings, newest first.</li>
+  <li><strong>Export Button</strong> — triggers CSV download via <code>/api/export/csv</code>.</li>
+</ol>
+
+<h2>Synology NAS Deployment</h2>
+<ol>
+  <li>Install Docker via Synology Package Center</li>
+  <li>Create <code>docker-compose.yml</code> with <code>postgres</code> + <code>app</code> services</li>
+  <li>PostgreSQL data in a named Docker volume (persistent across restarts)</li>
+  <li>Expose port <code>3000</code> on the NAS</li>
+</ol>
+
+<h2>Coding Sequence</h2>
+<ol>
+  <li><code>npm init</code> — initialize Node project</li>
+  <li>Express server + API routes</li>
+  <li>PostgreSQL connection via <code>pg</code> library</li>
+  <li>DB schema / migration script</li>
+  <li>React frontend: form + history list + export button</li>
+  <li><code>npm run build</code> — React production build served via Express</li>
+  <li>Write <code>docker-compose.yml</code> for NAS</li>
+  <li>End-to-end test from iPhone on local network</li>
+</ol>
+
+<h2>Future Enhancements</h2>
+<ul>
+  <li>Authentication for local network privacy</li>
+  <li>Charts showing BP trends over time</li>
+  <li>Date range filtering in history view</li>
+  <li>Measurement reminders / notifications</li>
+</ul>
+
+<div class="footer">Generated by Claude · Blood Pressure Tracker Project Spec · March 2026</div>
+
+</body>
+</html>
