@@ -1,4 +1,5 @@
-FROM node:18-alpine
+# Build stage
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -6,31 +7,37 @@ WORKDIR /app
 COPY server/package*.json ./server/
 COPY client/package*.json ./client/
 
-# Install dependencies for server
-WORKDIR /app/server
-RUN npm ci --only=production
-
-# Install dependencies for client
+# Install dependencies for client build
 WORKDIR /app/client
-RUN npm ci
+COPY client/src ./src
+COPY client/tsconfig.json ./
+COPY client/vite.config.ts ./
+COPY client/index.html ./
+RUN npm ci && npm run build
 
-# Build React app
-RUN npm run build
-
-# Copy source code for server
+# Install dependencies and build server
 WORKDIR /app/server
 COPY server/src ./src
 COPY server/migrations ./migrations
 COPY server/tsconfig.json ./
+RUN npm ci && npm run build
 
-# Build TypeScript
-RUN npm run build
+# Production stage
+FROM node:18-alpine
 
-# Copy built client to server public
-COPY --from=client /app/client/build ../server/dist/public
+WORKDIR /app
 
-# Expose port
+# Copy built server and dependencies
+COPY --from=builder /app/server/dist ./dist
+COPY --from=builder /app/server/node_modules ./node_modules
+COPY --from=builder /app/server/package.json ./
+
+# Copy built client to server
+COPY --from=builder /app/client/build ./dist/public
+
+# Copy migrations
+COPY server/migrations ./migrations
+
 EXPOSE 3000
 
-# Start server
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]

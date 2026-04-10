@@ -31,20 +31,48 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/measurements', measurementsRouter);
 
 // Serve static files from React build (in production)
-const clientBuildPath = path.join(__dirname, '../../client/build');
-app.use(express.static(clientBuildPath));
+// Try multiple paths for compatibility (dev vs production/docker)
+const possiblePaths = [
+  path.join(__dirname, 'public'), // Docker path
+  path.join(__dirname, '../../client/build'), // Dev path
+];
 
-// Fallback to index.html for React Router (SPA)
-app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(clientBuildPath, 'index.html'), (err) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to serve frontend',
-      });
+let clientBuildPath = '';
+for (const tryPath of possiblePaths) {
+  try {
+    if (require('fs').existsSync(tryPath)) {
+      clientBuildPath = tryPath;
+      console.log(`✓ Found client build at: ${clientBuildPath}`);
+      break;
     }
+  } catch (e) {
+    // Continue to next path
+  }
+}
+
+if (clientBuildPath) {
+  app.use(express.static(clientBuildPath));
+
+  // Fallback to index.html for React Router (SPA)
+  app.get('*', (req: Request, res: Response) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'), (err) => {
+      if (err) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to serve frontend',
+        });
+      }
+    });
   });
-});
+} else {
+  console.warn('⚠ Client build not found. API-only mode.');
+  app.get('*', (req: Request, res: Response) => {
+    res.status(404).json({
+      success: false,
+      error: 'API endpoint not found. Use /api/measurements endpoints.',
+    });
+  });
+}
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
