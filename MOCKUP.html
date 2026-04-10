@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Blood Pressure Tracker - Mockup</title>
+  <style>
+    :root {
+      --primary: #3498db;
+      --danger: #e74c3c;
+      --success: #27ae60;
+      --bg: #f5f5f5;
+      --text: #333;
+      --border: #ddd;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      background: white;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .app-header h1 {
+      font-size: 24px;
+      color: var(--primary);
+      flex: 1;
+    }
+
+    .export-btn {
+      padding: 8px 16px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      min-height: 40px;
+      white-space: nowrap;
+    }
+
+    .export-btn:hover {
+      background: #229954;
+    }
+
+    .app-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .form-section,
+    .history-section {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-section h2,
+    .history-section h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    /* Form Styles */
+    .measurement-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-success {
+      background: #e6ffe6;
+      color: #27ae60;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border-left: 4px solid #27ae60;
+      font-size: 14px;
+    }
+
+    .submit-btn {
+      padding: 12px 16px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover {
+      background: #2980b9;
+    }
+
+    /* History List Styles */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .measurement-card {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px;
+      transition: box-shadow 0.2s;
+    }
+
+    .measurement-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .date {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .card-values {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .value-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .value-item .label {
+      font-size: 12px;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .value-item .value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .card-notes {
+      background: white;
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #666;
+      border-left: 3px solid #3498db;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #999;
+      padding: 24px;
+      font-style: italic;
+    }
+
+    @media (max-width: 767px) {
+      .app-header {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .app-header h1 {
+        font-size: 20px;
+      }
+
+      .app-main {
+        padding: 12px;
+        gap: 12px;
+      }
+
+      .form-section,
+      .history-section {
+        padding: 12px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .export-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .app-main {
+        grid-template-columns: 1fr 1fr;
+        max-width: 1000px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>🩺 Blood Pressure Tracker</h1>
+      <button class="export-btn">📥 Export as CSV</button>
+    </header>
+
+    <main class="app-main">
+      <!-- Form Section -->
+      <section class="form-section">
+        <h2>New Measurement</h2>
+        <form class="measurement-form">
+          <div class="form-success">✓ Measurement saved</div>
+
+          <div class="form-group">
+            <label for="measured_at">Date & Time</label>
+            <input type="datetime-local" id="measured_at" value="2026-04-10T21:30" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="systolic">Systolic (mmHg)</label>
+              <input type="number" id="systolic" inputmode="numeric" min="50" max="300" value="120" />
+            </div>
+
+            <div class="form-group">
+              <label for="diastolic">Diastolic (mmHg)</label>
+              <input type="number" id="diastolic" inputmode="numeric" min="30" max="200" value="80" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="pulse">Pulse (bpm) - Optional</label>
+            <input type="number" id="pulse" inputmode="numeric" min="20" max="250" placeholder="Leave empty if not measured" value="72" />
+          </div>
+
+          <div class="form-group">
+            <label for="notes">Notes - Optional</label>
+            <textarea id="notes" placeholder="Any observations or notes" rows="3">Normal reading after morning coffee</textarea>
+          </div>
+
+          <button type="submit" class="submit-btn">Save Measurement</button>
+        </form>
+      </section>
+
+      <!-- History Section -->
+      <section class="history-section">
+        <h2>Measurement History</h2>
+        <div class="history-list">
+          <!-- Sample Cards -->
+          <div class="measurement-card">
+            <div class="card-header">
+              <span class="date">Apr 10, 2026 9:30 PM</span>
+            </div>
+            <div class="card-values">
+              <div class="value-item">
+                <span class="label">Systolic</span>
+                <span class="value">120 mmHg</span>
+              </div>
+              <div class="value-item">
+                <span class="label">Diastolic</span>
+                <span class="value">80 mmHg</span>
+              </div>
+              <div class="value-item">
+                <span class="label">Pulse</span>
+                <span class="value">72 bpm</span>
+              </div>
+            </div>
+            <div class="card-notes">Normal reading after morning coffee</div>
+          </div>
+
+          <div class="measurement-card">
+            <div class="card-header">
+              <span class="date">Apr 10, 2026 7:15 AM</span>
+            </div>
+            <div class="card-values">
+              <div class="value-item">
+                <span class="label">Systolic</span>
+                <span class="value">118 mmHg</span>
+              </div>
+              <div class="value-item">
+                <span class="label">Diastolic</span>
+                <span class="value">78 mmHg</span>
+              </div>
+              <div class="value-item">
+                <span class="label">Pulse</span>
+                <span class="value">68 bpm</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="measurement-card">
+            <div class="card-header">
+              <span class="date">Apr 9, 2026 8:00 PM</span>
+            </div>
+            <div class="card-values">
+              <div class="value-item">
+                <span class="label">Systolic</span>
+                <span class="value">125 mmHg</span>
+              </div>
+              <div class="value-item">
+                <span class="label">Diastolic</span>
+                <span class="value">82 mmHg</span>
+              </div>
+              <div class="value-item">
+                <span class="label">Pulse</span>
+                <span class="value">75 bpm</span>
+              </div>
+            </div>
+            <div class="card-notes">After exercise</div>
+          </div>
+
+          <div class="measurement-card">
+            <div class="card-header">
+              <span class="date">Apr 9, 2026 6:45 AM</span>
+            </div>
+            <div class="card-values">
+              <div class="value-item">
+                <span class="label">Systolic</span>
+                <span class="value">116 mmHg</span>
+              </div>
+              <div class="value-item">
+                <span class="label">Diastolic</span>
+                <span class="value">76 mmHg</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
