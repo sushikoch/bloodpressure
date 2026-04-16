@@ -918,6 +918,115 @@ See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for detailed solutions.
 
 ---
 
+## 🎯 Claude Coding Principles
+
+These four principles guide all AI-assisted development on this project:
+
+### **1️⃣ Think Before Coding**
+
+LLMs tend to silently choose one interpretation and proceed. This principle enforces:
+
+- **Explicit assumptions** - Name all assumptions before coding
+- **Show alternatives** - If ambiguity exists, present multiple interpretations
+- **Suggest simpler approaches** - Point out if a simpler solution exists
+- **Ask clarifying questions** - Don't guess; demand clarity
+
+**In Practice:**
+```
+❌ Bad: "I'll add validation to the input"
+✅ Good: "I see two interpretations:
+   1. Server-side validation only (simpler, recommended)
+   2. Client + server validation (redundant but safer)
+   Which do you prefer? I recommend #1 unless specific security concerns exist."
+```
+
+---
+
+### **2️⃣ Simplicity First**
+
+**The Test:** Would an experienced developer call this overcomplicated? If yes, simplify it.
+
+- Avoid premature abstractions
+- Don't add features "just in case"
+- Use the simplest approach that solves the problem
+- Complex solutions need clear justification
+
+**In Practice:**
+```typescript
+// ❌ Over-engineered
+const createValidationMiddleware = (validators: Map<string, ValidationRule[]>) => 
+  (field: string) => validators.get(field)?.map(v => v.validate);
+
+// ✅ Simple and clear
+function validateMeasurementInput(input: CreateMeasurementInput): string | null {
+  if (input.systolic < 50 || input.systolic > 300) {
+    return 'systolic must be between 50 and 300';
+  }
+  return null;
+}
+```
+
+---
+
+### **3️⃣ Surgical Changes**
+
+Make focused, minimal changes that fix exactly what was asked:
+
+- **Clean up orphaned imports** - If you remove something, remove its imports too
+- **Remove dead code you create** - Code you added that becomes unused gets deleted
+- **Mark existing dead code** - Don't delete old, unused code; mark it with `// TODO: Remove if unused`
+- **One feature per commit** - Unrelated changes go in separate commits
+
+**In Practice:**
+```typescript
+// ✅ After removing a function, clean up its import
+// BEFORE: import { oldFunction, newFunction } from './utils';
+// AFTER:  import { newFunction } from './utils';
+
+// ✅ If you add a helper that doesn't get used, delete it
+// ❌ Don't leave: const unusedHelper = (x) => x * 2; // might use this later
+
+// ✅ If you find existing unused code, mark it
+// TODO: Remove getOldMetrics() if no longer needed after migration to new API
+function getOldMetrics() { ... }
+```
+
+---
+
+### **4️⃣ Goal-Driven Execution**
+
+Convert vague requests into verifiable goals with checkpoints:
+
+- **Define success criteria** - What does "done" mean?
+- **Create a plan** - Break multi-step tasks into clear steps
+- **Verify after each step** - Test, build, check before moving on
+- **Document assumptions** - Make your reasoning explicit
+
+**In Practice:**
+
+```
+❌ Vague Request: "Add validation to the form"
+
+✅ Goal-Driven Approach:
+   GOAL: Ensure all form inputs are validated before submission
+   
+   PLAN:
+   1. [ ] Add range validation to systolic (50-300) in FormComponent
+   2. [ ] Add range validation to diastolic (30-200) in FormComponent
+   3. [ ] Show error message when user enters invalid value
+   4. [ ] Disable submit button if any field is invalid
+   5. [ ] Test with invalid inputs: systolic=400, diastolic=10
+   6. [ ] Test with valid inputs: systolic=120, diastolic=80
+   
+   VERIFICATION:
+   - Form rejects systolic > 300? ✅
+   - Form rejects diastolic < 30? ✅
+   - Submit button disabled on error? ✅
+   - Submit button enabled when valid? ✅
+```
+
+---
+
 ## 🤖 Notes for AI Assistants
 
 ### **When Making Changes**
@@ -929,6 +1038,24 @@ See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for detailed solutions.
 5. **Keep commits focused** - One feature/fix per commit
 6. **Update documentation** - If behavior changes, update docs
 
+### **Apply the Four Principles**
+
+Every change should follow these principles in order:
+
+1. **Think Before Coding** → Clarify ambiguities before implementation
+2. **Simplicity First** → Choose the simplest solution
+3. **Surgical Changes** → Make only necessary changes, clean up as you go
+4. **Goal-Driven Execution** → Work towards verifiable goals with checkpoints
+
+Example workflow:
+```
+User says: "The form doesn't validate email"
+1. THINK: "Is this form supposed to have email? Let me check... No email field exists."
+2. SIMPLIFY: "Before adding validation, confirm: is email required? Show what needs to be added."
+3. SURGICAL: "If confirmed, add field + validation, test, commit atomically"
+4. GOAL-DRIVEN: "Verify: email field appears, validation works, tests pass"
+```
+
 ### **What NOT to Do**
 
 - ❌ Don't commit `.env` files with secrets
@@ -938,17 +1065,24 @@ See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for detailed solutions.
 - ❌ Don't hardcode values (use env vars)
 - ❌ Don't make destructive git operations without confirmation
 - ❌ Don't commit to `main`/`master` directly
+- ❌ Don't silently choose an interpretation - ask for clarification
+- ❌ Don't add "useful" features that weren't requested
+- ❌ Don't leave orphaned imports or dead code you created
 
 ### **Recommended Workflow**
 
-1. Create feature branch from latest main
-2. Make focused changes
-3. Test thoroughly
-4. Write clear commit message
-5. Push to feature branch
-6. Create pull request (if requested)
-7. Request review (if needed)
-8. Merge after approval
+1. **Clarify the request** - Ask questions if ambiguous (Think Before Coding)
+2. **Plan the approach** - Show steps and verification points (Goal-Driven)
+3. **Create feature branch** - From latest main, follow naming conventions
+4. **Make focused changes** - One feature/fix per commit (Surgical Changes)
+5. **Keep it simple** - Use straightforward solutions (Simplicity First)
+6. **Test thoroughly** - Run builds, tests, manual verification
+7. **Clean as you go** - Remove unused code you created
+8. **Write clear commit message** - Describe the "why", not just the "what"
+9. **Push to feature branch** - Not to main
+10. **Create pull request** (if requested) with reference to goal checkpoints
+11. **Request review** (if needed)
+12. **Merge after approval**
 
 ---
 
